@@ -121,7 +121,11 @@ public sealed class ConnectionPool : IConnectionPool
     //TODO implements Http Method
     public async ValueTask<IConnection> FindConnectionForTopicHttp(string topic, CancellationToken cancellationToken)
     {
-        ///lookup/v2/topic/persistent/pulsar-47xvox7w48e4/data_uplink/core_data-partition-0
+         if (!topic.Contains("-partition-"))
+         {
+             topic += "-partition-0";
+         }
+       // /lookup/v2/topic/persistent/pulsar-47xvox7w48e4/data_uplink/core_data-partition-0
         string uri = _serviceUrl + "lookup/v2/topic/" + topic.Replace("://", "/");
         Console.WriteLine($"http FindConnectionForTopicHttp uri: {uri}");
         HttpWebRequest req=   WebRequest.CreateHttp(uri);

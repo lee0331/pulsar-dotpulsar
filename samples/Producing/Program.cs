@@ -62,7 +62,7 @@ internal static class Program
             {
                 var data = "Lee test msg " + DateTime.UtcNow.ToLongTimeString();
                 Console.WriteLine($"start Sent: {data}");
-                _ = await producer.Send(data, cancellationToken);
+                _ = await producer.NewMessage().Property("tablename","mall_leaguer").Property("shopid","1000010").Send(data, cancellationToken);
                 Console.WriteLine($"Sent: {data}");
                 await Task.Delay(delay, cancellationToken);
             }
