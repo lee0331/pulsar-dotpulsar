@@ -55,7 +55,8 @@ public sealed class ProducerChannelFactory : IProducerChannelFactory
 
     public async Task<IProducerChannel> Create(CancellationToken cancellationToken)
     {
-        var connection = await _connectionPool.FindConnectionForTopic(_commandProducer.Topic, cancellationToken).ConfigureAwait(false);
+        //TODO change HttpMethod
+        var connection = await _connectionPool.FindConnectionForTopicHttp(_commandProducer.Topic, cancellationToken).ConfigureAwait(false);
         var channel = new Channel(_correlationId, _eventRegister, new AsyncQueue<MessagePackage>());
         var response = await connection.Send(_commandProducer, channel, cancellationToken).ConfigureAwait(false);
         var schemaVersion = await GetSchemaVersion(connection, cancellationToken).ConfigureAwait(false);

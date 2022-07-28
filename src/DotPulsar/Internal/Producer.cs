@@ -106,7 +106,7 @@ public sealed class Producer<TMessage> : IProducer<TMessage>, IRegisterEvent
 
     private async Task Monitor()
     {
-        var numberOfPartitions = await GetNumberOfPartitions(Topic, _cts.Token).ConfigureAwait(false);
+        var numberOfPartitions =   await  _connectionPool.getTopicPartitionsHttp(Topic, _cts.Token).ConfigureAwait(false);;
         var isPartitionedTopic = numberOfPartitions != 0;
         var monitoringTasks = new Task<ProducerStateChanged>[isPartitionedTopic ? numberOfPartitions : 1];
 
@@ -178,9 +178,14 @@ public sealed class Producer<TMessage> : IProducer<TMessage>, IRegisterEvent
         return producer;
     }
 
+
+
+
+
+
     private async Task<uint> GetNumberOfPartitions(string topic, CancellationToken cancellationToken)
     {
-        var connection = await _connectionPool.FindConnectionForTopic(topic, cancellationToken).ConfigureAwait(false);
+        var connection = await _connectionPool.FindConnectionForTopicHttp(topic, cancellationToken).ConfigureAwait(false);
         var commandPartitionedMetadata = new PulsarApi.CommandPartitionedTopicMetadata { Topic = topic };
         var response = await connection.Send(commandPartitionedMetadata, cancellationToken).ConfigureAwait(false);
 

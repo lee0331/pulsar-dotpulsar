@@ -54,7 +54,7 @@ public sealed class ConsumerChannelFactory<TMessage> : IConsumerChannelFactory<T
 
     public async Task<IConsumerChannel<TMessage>> Create(CancellationToken cancellationToken)
     {
-        var connection = await _connectionPool.FindConnectionForTopic(_subscribe.Topic, cancellationToken).ConfigureAwait(false);
+        var connection = await _connectionPool.FindConnectionForTopicHttp(_subscribe.Topic, cancellationToken).ConfigureAwait(false);
         var messageQueue = new AsyncQueue<MessagePackage>();
         var channel = new Channel(_correlationId, _eventRegister, messageQueue);
         var response = await connection.Send(_subscribe, channel, cancellationToken).ConfigureAwait(false);

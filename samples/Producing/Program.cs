@@ -33,11 +33,18 @@ internal static class Program
             args.Cancel = true;
         };
 
-        await using var client = PulsarClient.Builder().Build(); // Connecting to pulsar://localhost:6650
+        await using var client = PulsarClient.Builder()
+            // .ServiceUrl(new Uri("pulsar://120.53.200.171:10007"))
+            .ServiceUrl(new Uri("http://pulsar-47xvox7w48e4.tdmq.ap-bj.public.tencenttdmq.com:8080"))
+            .Authentication(AuthenticationFactory.Token("eyJrZXlJZCI6InB1bHNhci00N3h2b3g3dzQ4ZTQiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwdWxzYXItNDd4dm94N3c0OGU0X3ljaCJ9.7R1GgocZ4Y5ca7b5lQ6HmDBiVgF-LmredQcnS6-OCZM"))
+            .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
+
+            .Build(); // Connecting to pulsar://localhost:6650
+
 
         await using var producer = client.NewProducer(Schema.String)
             .StateChangedHandler(Monitor)
-            .Topic("persistent://public/default/mytopic")
+            .Topic("persistent://pulsar-47xvox7w48e4/data_uplink/core_data")
             .Create();
 
         Console.WriteLine("Press Ctrl+C to exit");
@@ -53,7 +60,8 @@ internal static class Program
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var data = DateTime.UtcNow.ToLongTimeString();
+                var data = "Lee test msg " + DateTime.UtcNow.ToLongTimeString();
+                Console.WriteLine($"start Sent: {data}");
                 _ = await producer.Send(data, cancellationToken);
                 Console.WriteLine($"Sent: {data}");
                 await Task.Delay(delay, cancellationToken);

@@ -142,7 +142,7 @@ public sealed class PulsarClientBuilder : IPulsarClientBuilder
     {
         var scheme = _serviceUrl.Scheme;
 
-        if (scheme == Constants.PulsarScheme)
+        if (scheme == Constants.PulsarScheme|| scheme == "http")
         {
             _encryptionPolicy ??= EncryptionPolicy.EnforceUnencrypted;
 

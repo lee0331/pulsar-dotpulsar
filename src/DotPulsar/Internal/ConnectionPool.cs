@@ -18,10 +18,15 @@ using Abstractions;
 using DotPulsar.Abstractions;
 using DotPulsar.Exceptions;
 using Extensions;
+using Newtonsoft.Json;
 using PulsarApi;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -76,6 +81,67 @@ public sealed class ConnectionPool : IConnectionPool
         }
     }
 
+    public static string GetResponseString(HttpWebResponse res)
+    {
+        using (Stream stream = res.GetResponseStream())
+        {
+            StreamReader reader = new StreamReader(stream, Encoding.UTF8);
+            return reader.ReadToEnd();
+
+        }
+    }
+
+    public async ValueTask<uint> getTopicPartitionsHttp(string topic, CancellationToken cancellationToken)
+    {
+        // persistent://pulsar-47xvox7w48e4/data_uplink/core_data
+        string uri = _serviceUrl + "admin/v2/" + topic.Replace("://", "/")+"/partitions?checkAllowAutoCreation=true";
+      HttpWebRequest req=   WebRequest.CreateHttp(uri);
+      Console.WriteLine($"http Partitions url: {uri}");
+          // /admin/v2/persistent/pulsar-47xvox7w48e4/data_uplink/core_data/partitions?checkAllowAutoCreation=true
+      string  token = System.Text.Encoding.UTF8.GetString(await _authentication.GetAuthenticationData(cancellationToken));
+      req.Headers.Add("Authorization","Bearer "+token);
+      Console.WriteLine($"http Partitions   token: {token}");
+      Console.WriteLine($"http Partitions   request: {req}");
+      HttpWebResponse  res = req.GetResponse() as HttpWebResponse;
+      Console.WriteLine($"http Partitions   response: {res}");
+      //{"partitions":1}
+      String resstr = GetResponseString(res);
+      Console.WriteLine($"http Partitions   resstr: {resstr}");
+      res.Dispose();
+      Dictionary<string, uint> dic =  JsonConvert.DeserializeObject<Dictionary<string, uint>>(resstr);
+      uint ui = dic["partitions"];
+      Console.WriteLine($"http Partitions   ui: {ui}");
+      return ui;
+
+
+
+
+    }
+
+    //TODO implements Http Method
+    public async ValueTask<IConnection> FindConnectionForTopicHttp(string topic, CancellationToken cancellationToken)
+    {
+        ///lookup/v2/topic/persistent/pulsar-47xvox7w48e4/data_uplink/core_data-partition-0
+        string uri = _serviceUrl + "lookup/v2/topic/" + topic.Replace("://", "/");
+        Console.WriteLine($"http FindConnectionForTopicHttp uri: {uri}");
+        HttpWebRequest req=   WebRequest.CreateHttp(uri);
+        // /admin/v2/persistent/pulsar-47xvox7w48e4/data_uplink/core_data/partitions?checkAllowAutoCreation=true
+        string  token = System.Text.Encoding.UTF8.GetString(await _authentication.GetAuthenticationData(cancellationToken));
+        req.Headers.Add("Authorization","Bearer "+token);
+        // req.Method();
+        Console.WriteLine($"http FindConnectionForTopicHttp token: {token}");
+        Console.WriteLine($"http FindConnectionForTopicHttp request: {req}");
+        HttpWebResponse  res = req.GetResponse() as HttpWebResponse;
+        Console.WriteLine($"http FindConnectionForTopicHttp response: {res}");
+        //{"brokerUrl":"pulsar://120.53.200.171:10007","brokerUrlTls":"","httpUrl":"","httpUrlTls":"","nativeUrl":"pulsar://120.53.200.171:10007"}
+        String resstr = GetResponseString(res);
+        Console.WriteLine($"http FindConnectionForTopicHttp resstr: {resstr}");
+        res.Dispose();
+        Dictionary<string, string> dic =  JsonConvert.DeserializeObject<Dictionary<string, string>>(resstr);
+        string burl = dic["brokerUrl"];
+        Console.WriteLine($"http FindConnectionForTopicHttp brokerUrl: {burl}");
+        return await GetConnection(new Uri(burl), cancellationToken).ConfigureAwait(false);
+    }
     public async ValueTask<IConnection> FindConnectionForTopic(string topic, CancellationToken cancellationToken)
     {
         var lookup = new CommandLookupTopic

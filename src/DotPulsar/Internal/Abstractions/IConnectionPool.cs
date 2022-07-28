@@ -21,4 +21,6 @@ using System.Threading.Tasks;
 public interface IConnectionPool : IAsyncDisposable
 {
     ValueTask<IConnection> FindConnectionForTopic(string topic, CancellationToken cancellationToken = default);
+    ValueTask<uint> getTopicPartitionsHttp(string topic, CancellationToken cancellationToken = default);
+    ValueTask<IConnection> FindConnectionForTopicHttp(string topic, CancellationToken cancellationToken = default);
 }
