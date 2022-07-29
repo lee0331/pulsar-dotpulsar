@@ -33,20 +33,21 @@ internal static class Program
             cts.Cancel();
             args.Cancel = true;
         };
-
+        DotPulsar.Internal.Constants.fromip = "169.254.0.168";
+        DotPulsar.Internal.Constants.proxyip = "172.20.226.153";
         await using var client = PulsarClient.Builder()
-           
-            .ServiceUrl(new Uri("http://pulsar-*****.tdmq.ap-bj.public.tencenttdmq.com:8080"))
-            .Authentication(AuthenticationFactory.Token("eyJrZXlJZCI6****ZM"))
-            .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
 
+            //内网样式 ap-bj.qcloud.tencenttdmq.com:
+            .ServiceUrl(new Uri("http://pulsar-***.tdmq.ap-bj.qcloud.tencenttdmq.com:5006"))
+            .Authentication(AuthenticationFactory.Token("eyJr****CZM"))
+            .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
             .Build(); // Connecting to pulsar://localhost:6650
 
         await using var consumer = client.NewConsumer(Schema.String)
             .StateChangedHandler(Monitor)
             .SubscriptionName("lee_test_sub")
             //TODO 当前确实分区确认步骤，仅支持一个分区订阅  -partition-0
-            .Topic("persistent://pulsar-*****/data_uplink/core_data-partition-0")
+            .Topic("persistent://pulsar-****/data_uplink/core_data-partition-0")
             .SubscriptionType(SubscriptionType.KeyShared)
             .InitialPosition(SubscriptionInitialPosition.Earliest)
 

@@ -93,15 +93,29 @@ public sealed class ConnectionPool : IConnectionPool
 
     public async ValueTask<uint> getTopicPartitionsHttp(string topic, CancellationToken cancellationToken)
     {
-        // persistent://pulsar-47xvox7w48e4/data_uplink/core_data
-        string uri = _serviceUrl + "admin/v2/" + topic.Replace("://", "/")+"/partitions?checkAllowAutoCreation=true";
+        string rurl = _serviceUrl.ToString();
+        bool needHostHeader = false;
+        //处理内网serviceUrl
+        if (_serviceUrl.Host.Contains("qcloud.tencenttdmq.com"))
+        {
+            needHostHeader = true;
+            rurl = _serviceUrl.Scheme + "://"+Constants.proxyip+":" + _serviceUrl.Port+"/";
+        }
+
+        // persistent://pulsar-****/data_uplink/core_data
+        string uri = rurl + "admin/v2/" + topic.Replace("://", "/")+"/partitions?checkAllowAutoCreation=true";
       HttpWebRequest req=   WebRequest.CreateHttp(uri);
       Console.WriteLine($"http Partitions url: {uri}");
-          // /admin/v2/persistent/pulsar-47xvox7w48e4/data_uplink/core_data/partitions?checkAllowAutoCreation=true
+          // /admin/v2/persistent/pulsar-***/data_uplink/core_data/partitions?checkAllowAutoCreation=true
       string  token = System.Text.Encoding.UTF8.GetString(await _authentication.GetAuthenticationData(cancellationToken));
       req.Headers.Add("Authorization","Bearer "+token);
+      if (needHostHeader)
+      {
+          req.Headers.Add("host",_serviceUrl.Host);
+      }
+
       Console.WriteLine($"http Partitions   token: {token}");
-      Console.WriteLine($"http Partitions   request: {req}");
+      Console.WriteLine($"http FindConnectionForTopicHttp request uri: {req.Address} {JsonConvert.SerializeObject(req.Headers)}");
       HttpWebResponse  res = req.GetResponse() as HttpWebResponse;
       Console.WriteLine($"http Partitions   response: {res}");
       //{"partitions":1}
@@ -125,24 +139,53 @@ public sealed class ConnectionPool : IConnectionPool
          {
              topic += "-partition-0";
          }
-       // /lookup/v2/topic/persistent/pulsar-47xvox7w48e4/data_uplink/core_data-partition-0
-        string uri = _serviceUrl + "lookup/v2/topic/" + topic.Replace("://", "/");
+
+         string rurl = _serviceUrl.ToString();
+         bool needHostHeader = false;
+         //处理内网serviceUrl
+         if (_serviceUrl.Host.Contains("qcloud.tencenttdmq.com"))
+         {
+             needHostHeader = true;
+             rurl = _serviceUrl.Scheme + "://"+Constants.proxyip+":" + _serviceUrl.Port+"/";
+         }
+
+
+
+       // /lookup/v2/topic/persistent/pulsar-****/data_uplink/core_data-partition-0
+        string uri = rurl + "lookup/v2/topic/" + topic.Replace("://", "/");
+
+
         Console.WriteLine($"http FindConnectionForTopicHttp uri: {uri}");
+        // WebRequest.DefaultWebProxy
         HttpWebRequest req=   WebRequest.CreateHttp(uri);
-        // /admin/v2/persistent/pulsar-47xvox7w48e4/data_uplink/core_data/partitions?checkAllowAutoCreation=true
+        // /admin/v2/persistent/pulsar-****/data_uplink/core_data/partitions?checkAllowAutoCreation=true
         string  token = System.Text.Encoding.UTF8.GetString(await _authentication.GetAuthenticationData(cancellationToken));
         req.Headers.Add("Authorization","Bearer "+token);
+        if (needHostHeader)
+        {
+            req.Headers.Add("host",_serviceUrl.Host);
+        }
+
         // req.Method();
         Console.WriteLine($"http FindConnectionForTopicHttp token: {token}");
-        Console.WriteLine($"http FindConnectionForTopicHttp request: {req}");
+        Console.WriteLine($"http FindConnectionForTopicHttp request uri: {req.Address} {JsonConvert.SerializeObject(req.Headers)}");
         HttpWebResponse  res = req.GetResponse() as HttpWebResponse;
         Console.WriteLine($"http FindConnectionForTopicHttp response: {res}");
-        //{"brokerUrl":"pulsar://120.53.200.171:10007","brokerUrlTls":"","httpUrl":"","httpUrlTls":"","nativeUrl":"pulsar://120.53.200.171:10007"}
+        //{"brokerUrl":"pulsar://**:10007","brokerUrlTls":"","httpUrl":"","httpUrlTls":"","nativeUrl":"pulsar://**:10007"}
         String resstr = GetResponseString(res);
         Console.WriteLine($"http FindConnectionForTopicHttp resstr: {resstr}");
         res.Dispose();
         Dictionary<string, string> dic =  JsonConvert.DeserializeObject<Dictionary<string, string>>(resstr);
         string burl = dic["brokerUrl"];
+        //burl 增加tcp代理  puslsar://169.254.0.168:5084 --> 172.20.226.153 5000---5600
+
+
+
+        // burl = burl.Replace("169.254.0.168:5", "172.20.226.153:5");
+        burl = burl.Replace(Constants.fromip+":5", Constants.proxyip+":5");
+
+
+
         Console.WriteLine($"http FindConnectionForTopicHttp brokerUrl: {burl}");
         return await GetConnection(new Uri(burl), cancellationToken).ConfigureAwait(false);
     }
@@ -229,6 +272,7 @@ public sealed class ConnectionPool : IConnectionPool
     private async Task<Connection> EstablishNewConnection(PulsarUrl url, CancellationToken cancellationToken)
     {
         var stream = await _connector.Connect(url.Physical).ConfigureAwait(false);
+
         var connection = new Connection(new PulsarStream(stream), _keepAliveInterval, _authentication);
         DotPulsarMeter.ConnectionCreated();
         _connections[url] = connection;
@@ -333,4 +377,10 @@ public sealed class ConnectionPool : IConnectionPool
         public override string ToString()
             => $"{nameof(Physical)}: {Physical}, {nameof(Logical)}: {Logical}, {nameof(ProxyThroughServiceUrl)}: {ProxyThroughServiceUrl}";
     }
+
+
+
+
+
+
 }

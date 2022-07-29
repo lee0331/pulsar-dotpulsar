@@ -42,8 +42,14 @@ public static class Constants
         MetadataOffset = 10;
         ConversationId = "messaging.conversation_id";
         TimestampToTicks = TimeSpan.TicksPerSecond / (double) Stopwatch.Frequency;
+        //tdmqtencent own ip
+        fromip = "169.254.0.168";
+        // proxy ip
+        proxyip = "172.20.226.153";
     }
 
+    public static string fromip { get; set; }
+    public static string proxyip { get; set; }
     public static string ClientName { get; }
     public static string ClientVersion { get; }
     public static int ProtocolVersion { get; }

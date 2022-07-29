@@ -36,7 +36,6 @@ public sealed class PulsarClientBuilder : IPulsarClientBuilder
     private bool _verifyCertificateName;
     private TimeSpan _closeInactiveConnectionsInterval;
     private IAuthentication? _authentication;
-
     public PulsarClientBuilder()
     {
         _commandConnect = new CommandConnect
@@ -57,6 +56,7 @@ public sealed class PulsarClientBuilder : IPulsarClientBuilder
         _verifyCertificateAuthority = true;
         _verifyCertificateName = false;
         _closeInactiveConnectionsInterval = TimeSpan.FromSeconds(60);
+
     }
 
     public IPulsarClientBuilder AuthenticateUsingClientCertificate(X509Certificate2 clientCertificate)
@@ -170,4 +170,5 @@ public sealed class PulsarClientBuilder : IPulsarClientBuilder
 
         return new PulsarClient(connectionPool, processManager, exceptionHandlerPipeline, _serviceUrl);
     }
+
 }

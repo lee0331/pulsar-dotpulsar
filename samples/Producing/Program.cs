@@ -17,6 +17,7 @@ namespace Producing;
 using DotPulsar;
 using DotPulsar.Abstractions;
 using DotPulsar.Extensions;
+using DotPulsar.Internal;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,18 +34,24 @@ internal static class Program
             args.Cancel = true;
         };
 
+        DotPulsar.Internal.Constants.fromip = "169.254.0.168";
+        DotPulsar.Internal.Constants.proxyip = "172.20.226.153";
+
+
         await using var client = PulsarClient.Builder()
-           
-            .ServiceUrl(new Uri("http://pulsar-*****.tdmq.ap-bj.public.tencenttdmq.com:8080"))
-            .Authentication(AuthenticationFactory.Token("eyJrZXlJZCI6****OCZM"))
+
+
+            //公网地址
+            // .ServiceUrl(new Uri("http://pulsar-***.tdmq.ap-bj.public.tencenttdmq.com:8080"))
+            //内网地址
+            .ServiceUrl(new Uri("http://pulsar-XXXXX.tdmq.ap-bj.qcloud.tencenttdmq.com:5006"))
+            .Authentication(AuthenticationFactory.Token("eyJrZXl****OCZM"))
             .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
-
             .Build(); // Connecting to pulsar://localhost:6650
-
 
         await using var producer = client.NewProducer(Schema.String)
             .StateChangedHandler(Monitor)
-            .Topic("persistent://pulsar-47xvox7w48e4/data_uplink/core_data")
+            .Topic("persistent://pulsar-****/data_uplink/core_data")
             .Create();
 
         Console.WriteLine("Press Ctrl+C to exit");
@@ -62,9 +69,11 @@ internal static class Program
             {
                 var data = "Lee test msg " + DateTime.UtcNow.ToLongTimeString();
                 Console.WriteLine($"start Sent: {data}");
-                _ = await producer.NewMessage().Property("tablename","mall_leaguer").Property("shopid","1000010").Send(data, cancellationToken);
+                _ = await producer.NewMessage().
+                    Property("tablename","mall_leaguer").
+                    Property("shopid","1000010").Send(data, cancellationToken);
                 Console.WriteLine($"Sent: {data}");
-                await Task.Delay(delay, cancellationToken);
+                // await Task.Delay(delay, cancellationToken);
             }
         }
         catch (OperationCanceledException) // If not using the cancellationToken, then just dispose the producer and catch ObjectDisposedException instead
