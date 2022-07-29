@@ -34,9 +34,9 @@ internal static class Program
         };
 
         await using var client = PulsarClient.Builder()
-            // .ServiceUrl(new Uri("pulsar://120.53.200.171:10007"))
-            .ServiceUrl(new Uri("http://pulsar-47xvox7w48e4.tdmq.ap-bj.public.tencenttdmq.com:8080"))
-            .Authentication(AuthenticationFactory.Token("eyJrZXlJZCI6InB1bHNhci00N3h2b3g3dzQ4ZTQiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwdWxzYXItNDd4dm94N3c0OGU0X3ljaCJ9.7R1GgocZ4Y5ca7b5lQ6HmDBiVgF-LmredQcnS6-OCZM"))
+           
+            .ServiceUrl(new Uri("http://pulsar-*****.tdmq.ap-bj.public.tencenttdmq.com:8080"))
+            .Authentication(AuthenticationFactory.Token("eyJrZXlJZCI6****OCZM"))
             .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
 
             .Build(); // Connecting to pulsar://localhost:6650
