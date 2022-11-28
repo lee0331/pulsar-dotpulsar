@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -182,9 +183,9 @@ public sealed class ConnectionPool : IConnectionPool
 
 
         // burl = burl.Replace("169.254.0.168:5", "172.20.226.153:5");
-        burl = burl.Replace(Constants.fromip+":5", Constants.proxyip+":5");
+        // burl = burl.Replace(Constants.fromip+":5", Constants.proxyip+":5");
 
-
+        burl =  Regex.Replace(burl, "\\d+\\.{3}\\d+", Constants.proxyip);
 
         Console.WriteLine($"http FindConnectionForTopicHttp brokerUrl: {burl}");
         return await GetConnection(new Uri(burl), cancellationToken).ConfigureAwait(false);

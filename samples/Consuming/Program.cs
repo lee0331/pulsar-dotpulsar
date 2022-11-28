@@ -19,6 +19,7 @@ using DotPulsar.Abstractions;
 using DotPulsar.Extensions;
 using Newtonsoft.Json;
 using System;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -26,6 +27,12 @@ internal static class Program
 {
     private static async Task Main()
     {
+        var str = "puslsar://169.254.0.168:10001";
+
+        str = Regex.Replace(str, "\\d+\\.{3}\\d+", "172.20.226.143");
+
+        Console.WriteLine(str);
+
         var cts = new CancellationTokenSource();
 
         Console.CancelKeyPress += (sender, args) =>
@@ -38,16 +45,16 @@ internal static class Program
         await using var client = PulsarClient.Builder()
 
             //内网样式 ap-bj.qcloud.tencenttdmq.com:
-            .ServiceUrl(new Uri("http://pulsar-***.tdmq.ap-bj.qcloud.tencenttdmq.com:5006"))
-            .Authentication(AuthenticationFactory.Token("eyJr****CZM"))
+            .ServiceUrl(new Uri("http://pulsar-.tdmq.ap-bj.qcloud.tencenttdmq.com:5006"))
+            .Authentication(AuthenticationFactory.Token("exxxx"))
             .ExceptionHandler(ec => Console.WriteLine($"Exception: {ec.Exception}"))
             .Build(); // Connecting to pulsar://localhost:6650
 
         await using var consumer = client.NewConsumer(Schema.String)
             .StateChangedHandler(Monitor)
-            .SubscriptionName("lee_test_sub")
+            .SubscriptionName("ykt_center_core_cons")
             //TODO 当前确实分区确认步骤，仅支持一个分区订阅  -partition-0
-            .Topic("persistent://pulsar-****/data_uplink/core_data-partition-0")
+            .Topic("persistent://pulsar-xxxx/data_uplink/core_data-partition-0")
             .SubscriptionType(SubscriptionType.KeyShared)
             .InitialPosition(SubscriptionInitialPosition.Earliest)
 
@@ -66,8 +73,10 @@ internal static class Program
             await foreach (var message in consumer.Messages(cancellationToken))
             {
                 string prop = JsonConvert.SerializeObject(message.Properties);
+
                 Console.WriteLine($"Received prop: {prop}");
                 Console.WriteLine($"Received: {message.Value()}");
+                break;
                 await consumer.Acknowledge(message, cancellationToken);
             }
         }

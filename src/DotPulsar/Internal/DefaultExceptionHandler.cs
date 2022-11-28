@@ -53,15 +53,15 @@ public sealed class DefaultExceptionHandler : IHandleException
             PulsarStreamDisposedException _ => FaultAction.Retry,
             AsyncQueueDisposedException _ => FaultAction.Retry,
             OperationCanceledException _ => cancellationToken.IsCancellationRequested ? FaultAction.Rethrow : FaultAction.Retry,
-            DotPulsarException _ => FaultAction.Rethrow,
+            DotPulsarException _ => FaultAction.Retry,
             IOException _ => FaultAction.Retry,
             SocketException socketException => socketException.SocketErrorCode switch
             {
-                SocketError.HostNotFound => FaultAction.Rethrow,
-                SocketError.HostUnreachable => FaultAction.Rethrow,
-                SocketError.NetworkUnreachable => FaultAction.Rethrow,
+                SocketError.HostNotFound => FaultAction.Retry,
+                SocketError.HostUnreachable => FaultAction.Retry,
+                SocketError.NetworkUnreachable => FaultAction.Retry,
                 _ => FaultAction.Retry
             },
-            _ => FaultAction.Rethrow
+            _ => FaultAction.Retry
         };
 }
