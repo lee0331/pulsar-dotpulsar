@@ -185,7 +185,7 @@ public sealed class ConnectionPool : IConnectionPool
         // burl = burl.Replace("169.254.0.168:5", "172.20.226.153:5");
         // burl = burl.Replace(Constants.fromip+":5", Constants.proxyip+":5");
 
-        burl =  Regex.Replace(burl, "\\d+\\.{3}\\d+", Constants.proxyip);
+        burl =  Regex.Replace(burl, "\\d+\\.\\d+\\.\\d+\\.\\d+", Constants.proxyip);
 
         Console.WriteLine($"http FindConnectionForTopicHttp brokerUrl: {burl}");
         return await GetConnection(new Uri(burl), cancellationToken).ConfigureAwait(false);

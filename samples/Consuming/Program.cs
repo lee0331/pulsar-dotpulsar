@@ -29,9 +29,9 @@ internal static class Program
     {
         var str = "puslsar://169.254.0.168:10001";
 
-        str = Regex.Replace(str, "\\d+\\.{3}\\d+", "172.20.226.143");
+        var str2 = Regex.Replace(str, "\\d+\\.\\d+\\.\\d+\\.\\d+", "172.20.226.143");
 
-        Console.WriteLine(str);
+        Console.WriteLine(str2);
 
         var cts = new CancellationTokenSource();
 
